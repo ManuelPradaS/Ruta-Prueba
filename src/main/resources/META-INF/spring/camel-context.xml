@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cxf="http://camel.apache.org/schema/cxf"
+	xmlns:ctx="http://www.springframework.org/schema/context" xmlns:jee="http://www.springframework.org/schema/jee" xmlns:osgix="http://www.springframework.org/schema/osgi-compendium"
+	xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd
+        http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+        http://www.springframework.org/schema/osgi-compendium http://www.springframework.org/schema/osgi-compendium/spring-osgi-compendium.xsd">
+
+	<import resource="properties-beans.xml" />
+
+	<!-- Buscar el Datasource by jndi -->
+	<jee:jndi-lookup id="sqlTest" jndi-name="osgi:service/jdbc/practica" expected-type="javax.sql.DataSource" />
+
+	<!-- SQL component -->
+	<bean id="sql" class="org.apache.camel.component.sql.SqlComponent">
+		<property name="dataSource" ref="sqlTest" />
+	</bean>
+
+	<bean id="process" class="com.ejemplo.rest.rest.processor.usuarioProccesor" />
+
+	<!-- Enabled Spring Annotations -->
+	<ctx:annotation-config />
+	<ctx:component-scan base-package="com.ejemplo.rest.*" />
+
+	<bean class="org.slf4j.LoggerFactory" factory-method="getLogger" id="loggerRef">
+		<constructor-arg index="0" value="RutaRest" />
+	</bean>
+	<!-- call static method -->
+	<bean id="test" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="targetClass" value="org.slf4j.MDC" />
+		<property name="targetMethod" value="put" />
+		<property name="arguments">
+			<list>
+				<value>ruta-rest</value>
+				<value>RutaRest</value>
+			</list>
+		</property>
+	</bean>
+
+	<cxf:rsServer id="restServer" address="${rest.server.url.path}" serviceClass="com.ejemplo.rest.rest.service.RestService" staticSubresourceResolution="true">
+		<cxf:providers>
+			<bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider" />
+		</cxf:providers>
+	</cxf:rsServer>
+
+	<bean id="metric" class="org.apache.camel.component.metrics.MetricsComponent">
+		<description>Camel Metrics Component</description>
+	</bean>
+	<!-- Use camel-metrics route policy to gather metrics for all routes -->
+	<bean id="metricsRoutePolicyFactory" class="org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory">
+		<property name="useJmx" value="true" />
+	</bean>
+
+	<camelContext id="ctx-ruta-rest" messageHistory="true" trace="false" useMDCLogging="true" typeConverterStatisticsEnabled="true" xmlns="http://camel.apache.org/schema/spring">
+		<propertyPlaceholder location="ref:props, ref:mail-props" id="propertiesRef" />
+		<endpoint id="rsServerEndpoint" uri="cxfrs://bean://restServer">
+			<property key="bindingStyle" value="SimpleConsumer" />
+			<property key="loggingFeatureEnabled" value="{{rest.server.loggingFeatureEnabled}}" />
+		</endpoint>
+		<endpoint id="sedaCorreoSoporteEndpoint" uri="seda:mailErrorNotification" />
+
+		<onException id="CustomExceptionHandling">
+			<description></description>
+			<exception>java.lang.Exception</exception>
+			<handled>
+				<constant>true</constant>
+			</handled>
+			<log id="logBodyRequest" message="Exception: ${exception.message}, StackTrace:  ${exception.stacktrace}" loggingLevel="ERROR" loggerRef="loggerRef" />
+			<bean ref="responseHandler">
+				<description>Create Respone Bean</description>
+			</bean>
+
+			<to uri="ref:sedaCorreoSoporteEndpoint" pattern="InOnly" />
+		</onException>
+
+		<route id="restServerRoute" streamCache="true">
+			<from uri="ref:rsServerEndpoint" id="restFrom" />
+			<log id="logBodyRequest" message="Body: ${body}" loggingLevel="INFO" loggerRef="loggerRef" />
+			<log loggingLevel="INFO" message="Nuevo usuario Ingresado ${body.username} " />
+			<log loggingLevel="INFO" message="Contrasena Ingresado ${body.contrasena} " />
+			<log loggingLevel="INFO" message="Nombre Ingresado ${body.nombre} " />
+			<log loggingLevel="INFO" message="Apellido Ingresado ${body.apellido} " />
+
+			<!-- Setear headers -->
+			<setHeader headerName="username">
+				<simple>${body.username}</simple>
+			</setHeader>
+			<setHeader headerName="contrasena">
+				<simple>${body.contrasena}</simple>
+			</setHeader>
+			<setHeader headerName="nombre">
+				<simple>${body.nombre}</simple>
+			</setHeader>
+			<setHeader headerName="apellido">
+				<simple>${body.apellido}</simple>
+			</setHeader>
+
+			<to uri="sql://INSERT INTO usuario (nombre,apellido,username,contraseña) VALUES (:#username,:#contrasena,:#nombre,:#apellido)" />
+			<to uri="sql://SELECT * FROM usuario" />
+			<log loggingLevel="INFO" message="Recuperado base de datos ${body} "></log>
+			<marshal id="_marshal1">
+				<json  library="Jackson" prettyPrint="true" useList="true" />
+			</marshal>
+			
+			<log loggingLevel="INFO" message="Body a JSON ${body} " />
+
+			<bean ref="responseHandler">
+				<description>Create Respone Bean</description>
+			</bean>
+
+			<to uri="metrics:counter:RutaRest">
+				<description>Increment Metrics for Application: RutaRest</description>
+			</to>
+		</route>
+
+		<route id="ROUTE-MAIL-NOTIFICATION" customId="true" streamCache="true">
+			<description>Se redirecciona el mensaje al JMS de envío de Emails</description>
+			<from uri="ref:sedaCorreoSoporteEndpoint" />
+			<doTry>
+				<log message="Notificando el Error: ${property.errorMessage}" loggingLevel="INFO" loggerRef="loggerRef" />
+				<setHeader headerName="DescripcionError">
+					<simple>${headers.errorMessage}</simple>
+				</setHeader>
+				<setHeader headerName="NombreServicio" id="NombreServicio">
+					<simple>{{application.service.name}}</simple>
+				</setHeader>
+				<setHeader headerName="TipoServicio" id="TipoServicio">
+					<simple>{{application.service.type}}</simple>
+				</setHeader>
+				<setProperty propertyName="mailTo">
+					<simple>{{email.to}}</simple>
+				</setProperty>
+				<setProperty propertyName="mailFrom">
+					<simple>{{email.from}}</simple>
+				</setProperty>
+				<setProperty propertyName="mailSubject">
+					<simple>{{email.subject}}</simple>
+				</setProperty>
+				<setProperty propertyName="mailTemplate">
+					<constant>PlantillaCorreo</constant>
+				</setProperty>
+				<process ref="prepareMailingNotificationProcessor">
+					<description>Create request to send to notification queue</description>
+				</process>
+				<log message="Enviando mensaje a la JMS de Notificaciones: ${body}" loggingLevel="INFO" loggerRef="loggerRef" />
+				<inOnly uri="activemq:queue:{{email.notification.queue.name}}" />
+				<doCatch>
+					<exception>java.lang.Exception</exception>
+					<handled>
+						<constant>true</constant>
+					</handled>
+					<log message="Error enviando mensaje al QUEUE: {{email.notification.queue.name}}, MessageError: ${exception.message}" loggingLevel="ERROR" loggerRef="loggerRef" />
+				</doCatch>
+			</doTry>
+		</route>
+	</camelContext>
+
+	<!-- ActiveMQ Configuration -->
+	<bean class="org.apache.activemq.ActiveMQConnectionFactory" id="jmsConnectionFactory" depends-on="amq-props">
+		<property name="brokerURL" value="${AMQ.brokerURL}" />
+		<property name="userName" value="${AMQ.userName}" />
+		<property name="password" value="${AMQ.password}" />
+	</bean>
+	<bean class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop" id="pooledConnectionFactory" init-method="start">
+		<property name="maxConnections" value="10" />
+		<property name="maximumActiveSessionPerConnection" value="100" />
+		<property name="blockIfSessionPoolIsFull" value="false" />
+		<property name="blockIfSessionPoolIsFullTimeout" value="10000" />
+		<property name="connectionFactory" ref="jmsConnectionFactory" />
+	</bean>
+	<bean class="org.apache.camel.component.jms.JmsConfiguration" id="jmsConfiguration">
+		<property name="connectionFactory" ref="pooledConnectionFactory" />
+	</bean>
+	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+		<property name="Configuration" ref="jmsConfiguration" />
+	</bean>
+	<!-- End ActiveMQ Configuration -->
+
+</beans>
