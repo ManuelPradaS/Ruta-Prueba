@@ -4,7 +4,11 @@
 	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:osgix="http://www.springframework.org/schema/osgi-compendium"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd         http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd         http://www.springframework.org/schema/osgi-compendium http://www.springframework.org/schema/osgi-compendium/spring-osgi-compendium.xsd">
+	
+	
 	<import resource="properties-beans.xml" />
+	
+	
 	<!-- Buscar el Datasource by jndi -->
 	<jee:jndi-lookup expected-type="javax.sql.DataSource"
 		id="sqlTest" jndi-name="osgi:service/jdbc/practica" />
@@ -50,16 +54,23 @@
 		id="metricsRoutePolicyFactory">
 		<property name="useJmx" value="true" />
 	</bean>
+	
+	
 	<camelContext id="ctx-ruta-rest" messageHistory="true"
 		trace="false" typeConverterStatisticsEnabled="true" useMDCLogging="true"
 		xmlns="http://camel.apache.org/schema/spring">
+		
 		<propertyPlaceholder id="propertiesRef"
 			location="ref:props, ref:mail-props" />
+			
 		<endpoint id="rsServerEndpoint" uri="cxfrs://bean://restServer">
 			<property key="bindingStyle" value="SimpleConsumer" />
 			<property key="loggingFeatureEnabled" value="{{rest.server.loggingFeatureEnabled}}" />
 		</endpoint>
+		
 		<endpoint id="sedaCorreoSoporteEndpoint" uri="seda:mailErrorNotification" />
+		
+		
 		<onException id="CustomExceptionHandling">
 			<description />
 			<exception>java.lang.Exception</exception>
@@ -76,22 +87,26 @@
 
 
 
-		<route id="producer">
-			<from id="_from2" uri="activemq:queue:{{queue.name}}" />
-			<setHeader headerName="query">
-				<simple>${body.LEG_NO}</simple>
-			</setHeader>
-			<to id="toProcesor" uri="direct:procesor" />
-		</route>
+	<route id="producer">
+		<from id="fromIn" uri="activemq:{{queue.name}}" />
+		<setHeader headerName="query">
+			<simple>${body.LEG_NO}</simple>
+		</setHeader>
+		<to id="toProcesor" uri="direct:procesor" />
+	</route>
+
+
+	<route id="processor">
+		<from id="fromProducer" uri="direct:procesor" />
+		<to id="toConsumer" uri="direct:consumer" />
+	</route>
+
+
+	<route id="consumer">
+		<from id="fromProcessor" uri="direct:consumer" />
+		<to id="toFtp" uri="ftp:{{ftp.path}}" />
+	</route>
 		
-		<route id="procesor">
-			<from id="direct:procesor" uri="direct:procesor" />
-		</route>
-		
-		<route id="consumer">
-			<from id="_from3" uri="direct:name" />
-			<to id="_to1" uri="ftp:{{ftp.path}}" />
-		</route>
 		
 	</camelContext>
 
@@ -104,23 +119,32 @@
 		<property name="userName" value="${AMQ.userName}" />
 		<property name="password" value="${AMQ.password}" />
 	</bean>
+
 	<bean class="org.apache.activemq.pool.PooledConnectionFactory"
 		destroy-method="stop" id="pooledConnectionFactory" init-method="start">
 		<property name="maxConnections" value="10" />
-		<property name="maximumActiveSessionPerConnection" value="100" />
+		<property name="maximumActiveSessionPerConnection"
+			value="100" />
 		<property name="blockIfSessionPoolIsFull" value="false" />
-		<property name="blockIfSessionPoolIsFullTimeout" value="10000" />
+		<property name="blockIfSessionPoolIsFullTimeout"
+			value="10000" />
 		<property name="connectionFactory" ref="jmsConnectionFactory" />
 	</bean>
-	<bean class="org.apache.camel.component.jms.JmsConfiguration" id="jmsConfiguration">
-		<property name="connectionFactory" ref="pooledConnectionFactory" />
+
+	<bean class="org.apache.camel.component.jms.JmsConfiguration"
+		id="jmsConfiguration">
+		<property name="connectionFactory"
+			ref="pooledConnectionFactory" />
 	</bean>
-	<bean class="org.apache.activemq.camel.component.ActiveMQComponent"
+
+	<bean
+		class="org.apache.activemq.camel.component.ActiveMQComponent"
 		id="activemq">
 		<property name="Configuration" ref="jmsConfiguration" />
 	</bean>
 
-
-
 	<!-- End ActiveMQ Configuration -->
+	
+	
+	
 </beans>
