@@ -1,3 +1,18 @@
 Manifest-Version: 1.0
-Class-Path: 
-
+Bnd-LastModified: 1566275916064
+Build-Jdk: 1.8.0_211
+Built-By: ASSERT
+Bundle-Description: Proyecto Camel Generado a partir de un Archetype par
+ a JBoss Fuse Avianca
+Bundle-ManifestVersion: 2
+Bundle-Name: AVI :: REST Service :: RutaRest
+Bundle-SymbolicName: com.ejemplo.camel.prueba
+Bundle-Version: 1.2.0
+Created-By: Apache Maven Bundle Plugin
+Import-Package: com.fasterxml.jackson.annotation;version="[2.6,3)",com.f
+ asterxml.jackson.databind.annotation;version="[2.6,3)",javax.ws.rs;vers
+ ion="[2.0,3)",org.apache.activemq,org.apache.activemq.camel.component,o
+ rg.apache.activemq.pool,org.apache.camel;version="[2.15,3)",org.apache.
+ camel.component.jms,org.springframework.beans.factory.config,org.spring
+ framework.stereotype
+Tool: Bnd-1.50.0

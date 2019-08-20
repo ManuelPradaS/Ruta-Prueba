@@ -5,79 +5,94 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd         http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd         http://www.springframework.org/schema/osgi-compendium http://www.springframework.org/schema/osgi-compendium/spring-osgi-compendium.xsd">
 	<import resource="properties-beans.xml" />
+	
+	  
 	<!-- Buscar el Datasource by jndi -->
-	<jee:jndi-lookup expected-type="javax.sql.DataSource"
-		id="sqlTest" jndi-name="osgi:service/jdbc/practica" />
+	
+<!-- 	<jee:jndi-lookup expected-type="javax.sql.DataSource" -->
+<!-- 		id="sqlTest" jndi-name="osgi:service/jdbc/practica" /> -->
+		
 	<!-- SQL component -->
-	<bean class="org.apache.camel.component.sql.SqlComponent" id="sql">
-		<property name="dataSource" ref="sqlTest" />
-	</bean>
-	<bean class="com.ejemplo.rest.rest.processor.usuarioProccesor" id="process" />
+<!-- 	<bean class="org.apache.camel.component.sql.SqlComponent" id="sql"> -->
+<!-- 		<property name="dataSource" ref="sqlTest" /> -->
+<!-- 	</bean> -->
+<!-- 	<bean class="com.ejemplo.rest.rest.processor.usuarioProccesor" id="process" /> -->
+	
 	<!-- Enabled Spring Annotations -->
-	<ctx:annotation-config />
-	<ctx:component-scan base-package="com.ejemplo.rest.*" />
-	<bean class="org.slf4j.LoggerFactory" factory-method="getLogger"
-		id="loggerRef">
-		<constructor-arg index="0" value="RutaRest" />
-	</bean>
+<!-- 	<ctx:annotation-config /> -->
+<!-- 	<ctx:component-scan base-package="com.ejemplo.rest.*" /> -->
+<!-- 	<bean class="org.slf4j.LoggerFactory" factory-method="getLogger" -->
+<!-- 		id="loggerRef"> -->
+<!-- 		<constructor-arg index="0" value="RutaRest" /> -->
+<!-- 	</bean> -->
+	
 	<!-- call static method -->
-	<bean
-		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
-		id="test">
-		<property name="targetClass" value="org.slf4j.MDC" />
-		<property name="targetMethod" value="put" />
-		<property name="arguments">
-			<list>
-				<value>ruta-rest</value>
-				<value>RutaRest</value>
-			</list>
-		</property>
-	</bean>
-	<cxf:rsServer address="${rest.server.url.path}" id="restServer"
-		serviceClass="com.ejemplo.rest.rest.service.RestService"
-		staticSubresourceResolution="true">
-		<cxf:providers>
-			<bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider" />
-		</cxf:providers>
-	</cxf:rsServer>
-	<bean class="org.apache.camel.component.metrics.MetricsComponent"
-		id="metric">
-		<description>Camel Metrics Component</description>
-	</bean>
+<!-- 	<bean -->
+<!-- 		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" -->
+<!-- 		id="test"> -->
+<!-- 		<property name="targetClass" value="org.slf4j.MDC" /> -->
+<!-- 		<property name="targetMethod" value="put" /> -->
+<!-- 		<property name="arguments"> -->
+<!-- 			<list> -->
+<!-- 				<value>ruta-rest</value> -->
+<!-- 				<value>RutaRest</value> -->
+<!-- 			</list> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
+	
+<!-- 	<cxf:rsServer address="${rest.server.url.path}" id="restServer" -->
+<!-- 		serviceClass="com.ejemplo.rest.rest.service.RestService" -->
+<!-- 		staticSubresourceResolution="true"> -->
+<!-- 		<cxf:providers> -->
+<!-- 			<bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider" /> -->
+<!-- 		</cxf:providers> -->
+<!-- 	</cxf:rsServer> -->
+	
+<!-- 	<bean class="org.apache.camel.component.metrics.MetricsComponent" -->
+<!-- 		id="metric"> -->
+<!-- 		<description>Camel Metrics Component</description> -->
+<!-- 	</bean> -->
+	
 	<!-- Use camel-metrics route policy to gather metrics for all routes -->
-	<bean
-		class="org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory"
-		id="metricsRoutePolicyFactory">
-		<property name="useJmx" value="true" />
-	</bean>
-	<camelContext id="ctx-ruta-rest" messageHistory="true"
-		trace="false" typeConverterStatisticsEnabled="true" useMDCLogging="true"
-		xmlns="http://camel.apache.org/schema/spring">
-		<propertyPlaceholder id="propertiesRef"
-			location="ref:props, ref:mail-props" />
-		<endpoint id="rsServerEndpoint" uri="cxfrs://bean://restServer">
-			<property key="bindingStyle" value="SimpleConsumer" />
-			<property key="loggingFeatureEnabled" value="{{rest.server.loggingFeatureEnabled}}" />
-		</endpoint>
-		<endpoint id="sedaCorreoSoporteEndpoint" uri="seda:mailErrorNotification" />
-		<onException id="CustomExceptionHandling">
-			<description />
-			<exception>java.lang.Exception</exception>
-			<handled>
-				<constant>true</constant>
-			</handled>
-			<log id="logBodyRequest" loggerRef="loggerRef" loggingLevel="ERROR"
-				message="Exception: ${exception.message}, StackTrace:  ${exception.stacktrace}" />
-			<bean ref="responseHandler">
-				<description>Create Respone Bean</description>
-			</bean>
-			<to pattern="InOnly" uri="ref:sedaCorreoSoporteEndpoint" />
-		</onException>
+<!-- 	<bean -->
+<!-- 		class="org.apache.camel.component.metrics.routepolicy.MetricsRoutePolicyFactory" -->
+<!-- 		id="metricsRoutePolicyFactory"> -->
+<!-- 		<property name="useJmx" value="true" /> -->
+<!-- 	</bean>  -->
+
+<!-- 	<camelContext id="ctx-ruta-rest" messageHistory="true" -->
+<!-- 		trace="false" typeConverterStatisticsEnabled="true" useMDCLogging="true" -->
+<!-- 		xmlns="http://camel.apache.org/schema/spring"> -->
+<!-- 		<propertyPlaceholder id="propertiesRef" -->
+<!-- 			location="ref:props, ref:mail-props" /> -->
+<!-- 		<endpoint id="rsServerEndpoint" uri="cxfrs://bean://restServer"> -->
+<!-- 			<property key="bindingStyle" value="SimpleConsumer" /> -->
+<!-- 			<property key="loggingFeatureEnabled" value="{{rest.server.loggingFeatureEnabled}}" /> -->
+<!-- 		</endpoint> -->
+
+<!-- 		<endpoint id="sedaCorreoSoporteEndpoint" uri="seda:mailErrorNotification" /> -->
+		
+		
+		
+<!-- 		<onException id="CustomExceptionHandling"> -->
+<!-- 			<description /> -->
+<!-- 			<exception>java.lang.Exception</exception> -->
+<!-- 			<handled> -->
+<!-- 				<constant>true</constant> -->
+<!-- 			</handled> -->
+<!-- 			<log id="logBodyRequest" loggerRef="loggerRef" loggingLevel="ERROR" -->
+<!-- 				message="Exception: ${exception.message}, StackTrace:  ${exception.stacktrace}" /> -->
+<!-- 			<bean ref="responseHandler"> -->
+<!-- 				<description>Create Respone Bean</description> -->
+<!-- 			</bean> -->
+<!-- 			<to pattern="InOnly" uri="ref:sedaCorreoSoporteEndpoint" /> -->
+<!-- 		</onException> -->
 
 
 
+<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route id="producer">
-			<from id="_from2" uri="activemq:queue:{{queue.name}}" />
+			<from id="fromQueue" uri="activemq:myqueue" />
 			<setHeader headerName="query">
 				<simple>${body.LEG_NO}</simple>
 			</setHeader>
@@ -85,18 +100,25 @@
 		</route>
 		
 		<route id="procesor">
-			<from id="direct:procesor" uri="direct:procesor" />
+			<from id="fromProducer" uri="direct:procesor" />
+			<to id="toConsumer" uri="direct:consumer" />
 		</route>
 		
 		<route id="consumer">
-			<from id="_from3" uri="direct:name" />
-			<to id="_to1" uri="ftp:{{ftp.path}}" />
+			<from id="fromProcesor" uri="direct:consumer" />
+			<to id="toFtp" uri="ftp:127.0.0.1/:45445" />
 		</route>
 		
-	</camelContext>
+        
+  </camelContext>
 
 
 
+<!--   <amq:broker brokerName="localhost" persistent="false" useJmx="false"/> -->
+<!--   <bean id="jms" class="org.apache.activemq.camel.component.ActiveMQComponent"> -->
+<!--     <property name="{{AMQ.userName}}" value="vm://localhost" /> -->
+<!--   </bean> -->
+  
 	<!-- ActiveMQ Configuration -->
 	<bean class="org.apache.activemq.ActiveMQConnectionFactory"
 		depends-on="amq-props" id="jmsConnectionFactory">
@@ -104,6 +126,7 @@
 		<property name="userName" value="${AMQ.userName}" />
 		<property name="password" value="${AMQ.password}" />
 	</bean>
+	
 	<bean class="org.apache.activemq.pool.PooledConnectionFactory"
 		destroy-method="stop" id="pooledConnectionFactory" init-method="start">
 		<property name="maxConnections" value="10" />
@@ -112,15 +135,17 @@
 		<property name="blockIfSessionPoolIsFullTimeout" value="10000" />
 		<property name="connectionFactory" ref="jmsConnectionFactory" />
 	</bean>
+	
 	<bean class="org.apache.camel.component.jms.JmsConfiguration" id="jmsConfiguration">
 		<property name="connectionFactory" ref="pooledConnectionFactory" />
 	</bean>
+	
 	<bean class="org.apache.activemq.camel.component.ActiveMQComponent"
 		id="activemq">
 		<property name="Configuration" ref="jmsConfiguration" />
 	</bean>
 
-
-
 	<!-- End ActiveMQ Configuration -->
+	
+	
 </beans>

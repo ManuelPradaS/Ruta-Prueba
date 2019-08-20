@@ -1,6 +1,6 @@
-com\ejemplo\rest\rest\dto\RequestDTO.class
 com\ejemplo\rest\rest\dto\ResponseDTO.class
 com\ejemplo\rest\rest\service\RestService.class
-com\ejemplo\rest\rest\processor\usuarioProccesor.class
 com\ejemplo\rest\rest\handler\ResponseHandler.class
 com\ejemplo\rest\rest\processor\PrepareMailingNotificationProcessor.class
+com\ejemplo\rest\rest\dto\RequestDTO.class
+com\ejemplo\rest\rest\processor\usuarioProccesor.class
