@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1566275916064
+Bnd-LastModified: 1566309262463
 Build-Jdk: 1.8.0_211
 Built-By: ASSERT
 Bundle-Description: Proyecto Camel Generado a partir de un Archetype par
@@ -7,12 +7,12 @@ Bundle-Description: Proyecto Camel Generado a partir de un Archetype par
 Bundle-ManifestVersion: 2
 Bundle-Name: AVI :: REST Service :: RutaRest
 Bundle-SymbolicName: com.ejemplo.camel.prueba
-Bundle-Version: 1.2.0
+Bundle-Version: 1.3.0
 Created-By: Apache Maven Bundle Plugin
 Import-Package: com.fasterxml.jackson.annotation;version="[2.6,3)",com.f
  asterxml.jackson.databind.annotation;version="[2.6,3)",javax.ws.rs;vers
- ion="[2.0,3)",org.apache.activemq,org.apache.activemq.camel.component,o
- rg.apache.activemq.pool,org.apache.camel;version="[2.15,3)",org.apache.
- camel.component.jms,org.springframework.beans.factory.config,org.spring
- framework.stereotype
+ ion="[2.0,3)",org.apache.activemq,org.apache.activemq.pool,org.apache.c
+ amel;version="[2.15,3)",org.apache.camel.component.jms,org.apache.camel
+ .component.metrics.routepolicy;version="[2.15,3)",org.springframework.b
+ eans.factory.config,org.springframework.stereotype
 Tool: Bnd-1.50.0

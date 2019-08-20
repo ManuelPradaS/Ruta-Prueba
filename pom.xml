@@ -4,7 +4,7 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ejemplo.camel</groupId>
-	<version>1.2.0</version>
+	<version>1.4.0</version>
 	<packaging>bundle</packaging>
 	<name>AVI :: REST Service :: RutaRest</name>
 	<description>Proyecto Camel Generado a partir de un Archetype para JBoss Fuse Avianca</description>
