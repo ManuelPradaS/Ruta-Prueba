@@ -4,10 +4,12 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ejemplo.camel</groupId>
-	<version>1.4.0</version>
+	<version>1.5.9</version>
 	<packaging>bundle</packaging>
-	<name>AVI :: REST Service :: RutaRest</name>
+	<name>RUTA de prueba</name>
+	
 	<description>Proyecto Camel Generado a partir de un Archetype para JBoss Fuse Avianca</description>
+	
 	<properties>
 		<jboss.fuse.bom.version>6.2.1.redhat-216</jboss.fuse.bom.version>
 		<maven.build.timestamp.format>yyyy.MM.dd.HHmm</maven.build.timestamp.format>
@@ -112,6 +114,11 @@
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-metrics</artifactId>
 		</dependency>
+
+<!-- 	<dependency> -->
+<!-- 		<groupId>org.apache.camel</groupId> -->
+<!-- 		<artifactId>camel-jsonpath</artifactId> -->
+<!-- 	</dependency> -->
 
 		<!-- <dependency> -->
 		<!-- <groupId>org.slf4j</groupId> -->

@@ -3,7 +3,7 @@
 	xmlns:ctx="http://www.springframework.org/schema/context" xmlns:cxf="http://camel.apache.org/schema/cxf"
 	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:osgix="http://www.springframework.org/schema/osgi-compendium"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd         http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd         http://www.springframework.org/schema/osgi-compendium http://www.springframework.org/schema/osgi-compendium/spring-osgi-compendium.xsd">
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd         http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd         http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd         http://www.springframework.org/schema/osgi-compendium http://www.springframework.org/schema/osgi-compendium/spring-osgi-compendium.xsd">
 
 
 	<import resource="properties-beans.xml" />
@@ -14,13 +14,44 @@
 		<property name="useJmx" value="true" />
 	</bean>
 
+	<!-- ActiveMQ Configuration -->
+	<bean class="org.apache.activemq.ActiveMQConnectionFactory" id="jmsConnectionFactory"
+		depends-on="amq-props">
+		<property name="brokerURL" value="${AMQ.brokerURL}" />
+		<property name="userName" value="${AMQ.userName}" />
+		<property name="password" value="${AMQ.password}" />
+	</bean>
+
+	<bean class="org.apache.activemq.pool.PooledConnectionFactory"
+		destroy-method="stop" id="pooledConnectionFactory" init-method="start">
+		<property name="maxConnections" value="10" />
+		<property name="maximumActiveSessionPerConnection" value="100" />
+		<property name="blockIfSessionPoolIsFull" value="false" />
+		<property name="blockIfSessionPoolIsFullTimeout" value="10000" />
+		<property name="connectionFactory" ref="jmsConnectionFactory" />
+	</bean>
+
+	<bean class="org.apache.camel.component.jms.JmsConfiguration" id="jmsConfiguration">
+		<property name="connectionFactory" ref="pooledConnectionFactory" />
+	</bean>
+
+	<bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+		<property name="Configuration" ref="jmsConfiguration" />
+	</bean>
+
+	<!-- End ActiveMQ Configuration -->
+
+
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route id="producer">
-			<from id="fromQueue" uri="activemq:myqueue" />
+			<from id="fromQueue" uri="activemq:myqueue:in" />
+			<log message="Incoming message: ${body} " logName="QueueInfo"
+				loggingLevel="INFO" />
 			<setHeader headerName="query">
-				<simple>${body.LEG_NO}</simple>
+				<jsonpath>$.LEG_NO</jsonpath>
 			</setHeader>
-			<to id="toProcesor" uri="direct:procesor" />
+			<log message="query: ${headers.query} " logName="QueueInfo"
+				loggingLevel="INFO" />
 		</route>
 
 		<route id="procesor">
@@ -162,49 +193,12 @@
 
 
 
-
-
-
-
 	<!-- <amq:broker brokerName="localhost" persistent="false" useJmx="false"/> -->
 	<!-- <bean id="jms" class="org.apache.activemq.camel.component.ActiveMQComponent"> -->
 	<!-- <property name="{{AMQ.userName}}" value="vm://localhost" /> -->
 	<!-- </bean> -->
 
 
-
-	<!-- ActiveMQ Configuration -->
-	<bean class="org.apache.activemq.ActiveMQConnectionFactory"
-		depends-on="amq-props" id="jmsConnectionFactory">
-		<property name="brokerURL" value="${AMQ.brokerURL}" />
-		<property name="userName" value="${AMQ.userName}" />
-		<property name="password" value="${AMQ.password}" />
-	</bean>
-
-	<bean class="org.apache.activemq.pool.PooledConnectionFactory"
-		destroy-method="stop" id="pooledConnectionFactory" init-method="start">
-		<property name="maxConnections" value="10" />
-		<property name="maximumActiveSessionPerConnection" value="100" />
-		<property name="blockIfSessionPoolIsFull" value="false" />
-		<property name="blockIfSessionPoolIsFullTimeout" value="10000" />
-		<property name="connectionFactory" ref="jmsConnectionFactory" />
-	</bean>
-
-
-	<bean class="org.apache.camel.component.jms.JmsConfiguration" id="jmsConfiguration">
-		<property name="connectionFactory" ref="pooledConnectionFactory" />
-	</bean>
-
-
-	<bean class="org.apache.camel.component.jms.JmsConfiguration" id="jmsConfiguration">
-		<property name="connectionFactory" ref="pooledConnectionFactory" />
-	</bean>
-
-	<!-- <bean class="org.apache.activemq.camel.component.ActiveMQComponent" -->
-	<!-- <property name="Configuration" ref="jmsConfiguration" /> -->
-	<!-- </bean> -->
-
-	<!-- End ActiveMQ Configuration -->
 
 
 
